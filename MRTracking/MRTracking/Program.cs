@@ -11,12 +11,20 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using MRTracking.Filters;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using MRTracking.Converters;
+
+// Configure Npgsql to handle timestamps properly
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", false);
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//builder.Services.AddDbContext<MRTrackingDBContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<MRTrackingDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register services and repositories
 builder.Services.AddScoped<IMedicalRepresentativeRepository, MedicalRepresentativeRepository>();
@@ -34,6 +42,7 @@ builder.Services.AddScoped<IMRGroupService, MRGroupService>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IClaimService, ClaimService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Enable CORS
 builder.Services.AddCors(options =>
@@ -49,6 +58,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers(options =>
 {
     //options.Filters.Add<CustomAuthorizeAttribute>(); // Register as a global filter
+})
+.AddJsonOptions(options =>
+{
+    // Add the UTC DateTime converters
+    options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    options.JsonSerializerOptions.Converters.Add(new NullableUtcDateTimeConverter());
 });
 
 // Swagger configuration

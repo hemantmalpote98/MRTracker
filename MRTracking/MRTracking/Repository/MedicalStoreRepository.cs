@@ -55,6 +55,8 @@ namespace MRTracking.Repository
 
         public async Task UpdateMedicalStoreAsync(MedicalStore medicalStore)
         {
+            var mrGroupId = await _context.MedicalStores.Where(d => d.MedicalStoreId == medicalStore.MedicalStoreId).Select(a => a.MRGroupId).FirstOrDefaultAsync();
+            medicalStore.MRGroupId = mrGroupId;
             medicalStore.UpdatedOn = DateTime.UtcNow;
             _context.MedicalStores.Update(medicalStore);
             await _context.SaveChangesAsync();
@@ -76,7 +78,7 @@ namespace MRTracking.Repository
             if (medicalStore != null)
             {
                 medicalStore.IsActive = true;
-                medicalStore.UpdatedOn = DateTime.Now;
+                medicalStore.UpdatedOn = DateTime.UtcNow;
                 medicalStore.UpdatedBy = userId;
 
                 await _context.SaveChangesAsync();
@@ -89,7 +91,7 @@ namespace MRTracking.Repository
             if (medicalStore != null)
             {
                 medicalStore.IsActive = false;
-                medicalStore.UpdatedOn = DateTime.Now;
+                medicalStore.UpdatedOn = DateTime.UtcNow;
                 medicalStore.UpdatedBy = userId;
 
                 await _context.SaveChangesAsync();
@@ -102,7 +104,7 @@ namespace MRTracking.Repository
             if (medicalStore != null)
             {
                 medicalStore.IsDeleted = true;
-                medicalStore.UpdatedOn = DateTime.Now;
+                medicalStore.UpdatedOn = DateTime.UtcNow;
                 medicalStore.UpdatedBy = Guid.NewGuid();
 
                 await _context.SaveChangesAsync();

@@ -25,12 +25,10 @@ namespace MRTracking.Repository
         {
             var medicalRepresentativeIdGuid = new Guid(medicalRepresentativeId);
             var result = await (from doctor in _context.Doctors
-                         join groups in _context.MRGroups
-                         on doctor.MRGroupId equals groups.MRGroupId
-                         join mr in _context.MedicalRepresentatives
-                         on groups.MRGroupId equals mr.MRGroupId
-                         where mr.MedicalRepresentativeId == medicalRepresentativeIdGuid
-                         select doctor).ToListAsync();
+                                join mr in _context.MedicalRepresentatives
+                                on doctor.MRGroupId equals mr.MRGroupId
+                                where mr.MedicalRepresentativeId == medicalRepresentativeIdGuid
+                                select doctor).ToListAsync();
             return result;
         }
 
@@ -43,15 +41,17 @@ namespace MRTracking.Repository
 
         public async Task AddDoctorAsync(Doctor doctor)
         {
-            doctor.CreatedOn = DateTime.Now;
-            doctor.UpdatedOn = DateTime.Now;
+            doctor.CreatedOn = DateTime.UtcNow;
+            doctor.UpdatedOn = DateTime.UtcNow;
             await _context.Doctors.AddAsync(doctor);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateDoctorAsync(Doctor doctor)
         {
-            doctor.UpdatedOn = DateTime.Now;
+            var doctorGroupId = await _context.Doctors.Where(d => d.DoctorId == doctor.DoctorId).Select(a => a.MRGroupId).FirstOrDefaultAsync();
+            doctor.UpdatedOn = DateTime.UtcNow;
+            doctor.MRGroupId = doctorGroupId;
             _context.Doctors.Update(doctor);
             await _context.SaveChangesAsync();
         }
@@ -62,7 +62,7 @@ namespace MRTracking.Repository
             if (doctor != null)
             {
                 doctor.IsDeleted = true;
-                doctor.UpdatedOn = DateTime.Now;
+                doctor.UpdatedOn = DateTime.UtcNow;
                 doctor.UpdatedBy = userId;
 
                 await _context.SaveChangesAsync();
@@ -75,7 +75,7 @@ namespace MRTracking.Repository
             if (doctor != null)
             {
                 doctor.IsActive = true;
-                doctor.UpdatedOn = DateTime.Now;
+                doctor.UpdatedOn = DateTime.UtcNow;
                 doctor.UpdatedBy = userId;
 
                 await _context.SaveChangesAsync();
@@ -88,7 +88,7 @@ namespace MRTracking.Repository
             if (doctor != null)
             {
                 doctor.IsActive = false;
-                doctor.UpdatedOn = DateTime.Now;
+                doctor.UpdatedOn = DateTime.UtcNow;
                 doctor.UpdatedBy = userId;
 
                 await _context.SaveChangesAsync();

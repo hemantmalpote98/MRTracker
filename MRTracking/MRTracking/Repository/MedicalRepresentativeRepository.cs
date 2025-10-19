@@ -1,7 +1,8 @@
-﻿using MRTracking.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MRTracking.Data;
 using MRTracking.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Numerics;
 
 namespace MRTracking.Repository
 {
@@ -43,6 +44,8 @@ namespace MRTracking.Repository
 
         public async Task UpdateRepresentativeAsync(MedicalRepresentative representative)
         {
+            var mrGroupId = await _context.MedicalRepresentatives.Where(d => d.MedicalRepresentativeId == representative.MedicalRepresentativeId).Select(a => a.MRGroupId).FirstOrDefaultAsync();
+            representative.MRGroupId = mrGroupId;
             _context.MedicalRepresentatives.Update(representative);
             await _context.SaveChangesAsync();
         }
