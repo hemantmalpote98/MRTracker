@@ -29,5 +29,32 @@ namespace MRTracking.Services
             }
             throw new BadHttpRequestException("Something wend wrong");
         }
+
+        public async Task<bool> ChangePassword(string userId, string oldPassword, string newPassword)
+        {
+            // Parse userId string to Guid
+            if (!Guid.TryParse(userId, out Guid userGuid))
+            {
+                throw new BadHttpRequestException("Invalid user ID format");
+            }
+
+            // Find user by ID
+            var user = await _userManager.FindByIdAsync(userGuid.ToString());
+            if (user == null)
+            {
+                throw new BadHttpRequestException("User not found");
+            }
+
+            // Verify old password
+            var isValidPassword = await _userManager.CheckPasswordAsync(user, oldPassword);
+            if (!isValidPassword)
+            {
+                return false;
+            }
+
+            // Change password
+            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+            return result.Succeeded;
+        }
     }
 }

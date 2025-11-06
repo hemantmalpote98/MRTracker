@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MRTracking.DTO;
 using MRTracking.Models.IdentityModel;
@@ -17,19 +18,25 @@ namespace MRTracking.Controllers
         private readonly ITokenRepository _tokenRepository;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly IAuthService _authService;
+        private readonly IClaimService _claimService;
 
         public AuthController(
             UserManager<ApplicationUser> userManager, 
             SignInManager<ApplicationUser> signInManager, 
             ITokenRepository tokenRepository,
             IEmailService emailService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAuthService authService,
+            IClaimService claimService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenRepository = tokenRepository;
             _emailService = emailService;
             _configuration = configuration;
+            _authService = authService;
+            _claimService = claimService;
         }
 
         [HttpPost]
@@ -143,6 +150,41 @@ namespace MRTracking.Controllers
             }
 
             return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
+        }
+
+        [HttpPost]
+        [Route("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDTO changePasswordRequest)
+        {
+            try
+            {
+                // Get the userId from the authenticated user's claims
+                var userId = _claimService.GetUserId();
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated.");
+                }
+
+                // Call the service to change password
+                var result = await _authService.ChangePassword(userId, changePasswordRequest.OldPassword, changePasswordRequest.NewPassword);
+                
+                if (result)
+                {
+                    return Ok("Password has been changed successfully.");
+                }
+
+                return BadRequest("Old password is incorrect.");
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "An error occurred while changing password. Please try again later.");
+            }
         }
     }
 }

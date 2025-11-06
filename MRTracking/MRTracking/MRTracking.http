@@ -4,3 +4,27 @@ GET {{MRTracking_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Login to get JWT token
+POST {{MRTracking_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "userName": "your-email@example.com",
+  "password": "your-password"
+}
+
+###
+
+# Change Password (requires authentication)
+# Replace YOUR_JWT_TOKEN with the token received from login
+POST {{MRTracking_HostAddress}}/api/Auth/change-password
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN
+
+{
+  "oldPassword": "current-password",
+  "newPassword": "new-password"
+}
+
+###

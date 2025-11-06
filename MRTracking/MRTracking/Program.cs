@@ -26,6 +26,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<MRTrackingDBContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
 // Register services and repositories
 builder.Services.AddScoped<IMedicalRepresentativeRepository, MedicalRepresentativeRepository>();
 builder.Services.AddScoped<IMedicalRepresentativeService, MedicalRepresentativeService>();
@@ -148,11 +151,13 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger in all environments (remove this block if you want Swagger only in Development)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("./v1/swagger.json", "MR Tracking API V1");  // Use relative path for subdirectory deployment
+    c.RoutePrefix = "swagger";  // Access Swagger UI at /swagger
+});
 
 // Ensure CORS is used before authentication and authorization
 app.UseCors("AllowSpecificOrigin");
@@ -160,12 +165,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-    c.RoutePrefix = string.Empty;  // Set Swagger UI at the root URL
-});
 
 app.Run();
